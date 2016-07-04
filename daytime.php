@@ -166,12 +166,8 @@ function daytime_shortcode( $atts, $content = null ) {
   $open = daytime_func();
 
   if ($a['when'] === 'open' && $open === true) {
-    $body_class = 'wpDayTime--open';
-
     return $content;
   } else if ($a['when'] === 'close' && $open === false) {
-    $body_class = 'wpDayTime--closed';
-
     return $content;
   }
 
@@ -184,6 +180,6 @@ add_filter( 'body_class', function( $classes = '' ) {
     if (daytime_func() === true) {
       return array_merge( $classes, array( 'wpDayTime--open' ) );
     } else {
-      return array_merge( $classes, array( 'wpDayTime--closed' ) );
+      return array_merge( $classes, array( 'wpDayTime--close' ) );
     }
 } );
