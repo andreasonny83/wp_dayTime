@@ -1,4 +1,6 @@
 <?php
+$body_class = '';
+
 function themename_customize_register($wp_customize) {
   $wp_customize->add_section(
       'daytime_section',
@@ -121,17 +123,12 @@ function themename_customize_register($wp_customize) {
   );
 }
 
-function daytime_func( $atts, $content = null ) {
+function daytime_func() {
   date_default_timezone_set('Europe/London');
   $sTime = date('Y-m-d');
   $days = array('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');
   $re = "/(\\d{2}):(\\d{2}) (\\d{2}):(\\d{2})\\s-\\s(\\d{2}):(\\d{2}) (\\d{2}):(\\d{2})/";
-  $open = false;
   $openingHours = array();
-
-  $a = shortcode_atts( array(
-          'when' => 'open'
-      ), $atts );
 
   foreach ($days as $key => $day) {
     preg_match($re, get_theme_mod( $day . '_hour', '' ), $match);
@@ -147,21 +144,46 @@ function daytime_func( $atts, $content = null ) {
   $today = $days[$dayofweek];
   $now = date('G') . date('i');
 
-  if ($now > (sprintf('%02d', $openingHours[$today][0]) . sprintf('%02d', $openingHours[$today][1])) &&
-      $now <= (sprintf('%02d', $openingHours[$today][2]) . sprintf('%02d', $openingHours[$today][3]))) {
-    $open = true;
+  if (
+      ($now > (sprintf('%02d', $openingHours[$today][0]) . sprintf('%02d', $openingHours[$today][1])) &&
+      $now <= (sprintf('%02d', $openingHours[$today][2]) . sprintf('%02d', $openingHours[$today][3]))) ||
+      ($now > (sprintf('%02d', $openingHours[$today][4]) . sprintf('%02d', $openingHours[$today][5])) &&
+      $now <= (sprintf('%02d', $openingHours[$today][6]) . sprintf('%02d', $openingHours[$today][7])))
+  ) {
+    return true;
   } else {
-    $open = false;
+    return false;
   }
 
+  return false;
+}
+
+function daytime_shortcode( $atts, $content = null ) {
+  $a = shortcode_atts( array(
+          'when' => 'open'
+      ), $atts );
+
+  $open = daytime_func();
+
   if ($a['when'] === 'open' && $open === true) {
+    $body_class = 'wpDayTime--open';
+
     return $content;
   } else if ($a['when'] === 'close' && $open === false) {
+    $body_class = 'wpDayTime--closed';
+
     return $content;
   }
 
   return false;
 }
 
-add_shortcode( 'daytime', 'daytime_func' );
+add_shortcode( 'daytime', 'daytime_shortcode' );
 add_action( 'customize_register', 'themename_customize_register' );
+add_filter( 'body_class', function( $classes = '' ) {
+    if (daytime_func() === true) {
+      return array_merge( $classes, array( 'wpDayTime--open' ) );
+    } else {
+      return array_merge( $classes, array( 'wpDayTime--closed' ) );
+    }
+} );
