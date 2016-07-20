@@ -159,6 +159,13 @@ function daytime_func() {
 }
 
 function daytime_shortcode( $atts, $content = null ) {
+  // If wprocket is present, clean the cache first
+  require_once( $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php' );
+	
+	if ( function_exists( 'rocket_clean_domain' ) ) {
+	rocket_clean_domain();
+ }
+ 
   $a = shortcode_atts( array(
           'when' => 'open'
       ), $atts );
